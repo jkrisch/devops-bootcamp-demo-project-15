@@ -1,0 +1,18 @@
+[webserver]
+138.68.98.23
+164.90.190.33
+
+#you can use [groupname:vars] to consolidate the vars you need for your execution
+[webserver:vars]
+ansible_ssh_private_key_file=/home/jonas/.ssh/id_rsa
+ansible_user=root
+
+
+# aws section for running ansible against aws ec2 instances
+# [aws]
+# ec2-3-74-46-159.eu-central-1.compute.amazonaws.com
+# ec2-3-127-245-27.eu-central-1.compute.amazonaws.com ansible_python_interpreter=/usr/bin/python3.9
+
+# [aws:vars]
+# ansible_ssh_private_key_file=/home/jonas/Downloads/ansible-key.pem
+# ansible_user=ec2-user
