@@ -58,3 +58,20 @@ amazon=namespace
 aws=collection
 
 FQCN = fully qualified collection name
+
+
+## Variables
+can be defined within the playbook using the 
+``` yaml
+vars:
+    - variable1: value1
+    - variable2: value2
+```
+syntax
+or by passing them when executing ansible-playbook using the
+``` bash
+--extra-vars "variable1=value1 variable2=value2"
+```
+parameter
+
+or (what is always preferred) use a vars file:

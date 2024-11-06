@@ -14,7 +14,7 @@
           - nodejs
           - npm
 
-- name: Create new Linux user for nodejs app
+- name: Create1 new Linux user for nodejs app
   hosts: 138.68.98.23
   tasks:
     - name: Create node user
@@ -26,20 +26,24 @@
 - name: Deploy nodejs app
   hosts:  138.68.98.23
   become: True
-  become_user: node
+  become_user: "{{ remote_user }}"
+  vars_files:
+    - project-vars.yaml
+  vars:
+    - remote_destionation: /home/"{{ remote_user }}"
   tasks:
     - name: Unpack the nodejs file
       ansible.builtin.unarchive:
-        src: developing-with-docker-1.0.0.tgz
-        dest: /home/node/
+        src: "developing-with-docker-{{ version }}.tgz"
+        dest: "{{ remote_destination }}"
 
     - name: Install dependencies
       community.general.npm:
-        path: /home/node/package
+        path: "{{ remote_destination }}/package"
 
     - name: Start the application
       ansible.builtin.command:
-        chdir: /home/node/package
+        chdir: "{{ remote_destination }}/package"
         cmd: node server
       #make the task asynchronous
       async: 1000
