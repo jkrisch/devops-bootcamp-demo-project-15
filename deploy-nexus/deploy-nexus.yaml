@@ -1,0 +1,103 @@
+---
+- name: install java and net-tools
+  hosts: nexus_servers
+  tasks:
+    - name: Update apt repo and cache
+      ansible.builtin.apt:
+        update_cache: true
+        force_apt_get: true
+        cache_valid_time: 3600
+      
+    - name: Install java 17
+      ansible.builtin.apt:
+        pkg:
+          - openjdk-17-jre-headless
+    
+    - name: Install net-tools
+      ansible.builtin.apt:
+        pkg:
+          - net-tools
+
+- name: Download and unpack Nexus installer
+  hosts: nexus_servers
+  tasks:
+    - name: Download Nexus
+      ansible.builtin.get_url:
+        url: https://download.sonatype.com/nexus/3/latest-unix.tar.gz
+        dest: /opt/
+      register: download_result
+    
+    - name: Unpack the nexus installer tar 
+      ansible.builtin.unarchive:
+        src: "{{ download_result.dest }}"
+        dest: /opt/
+        remote_src: True
+    
+    - name: Detect nexus folder container version
+      ansible.builtin.find:
+        path: /opt/
+        pattern: "nexus-*"
+        file_type: directory
+      register: search_result
+
+    - name: Check if nexus folder already exists
+      ansible.builtin.stat:
+        path: /opt/nexus
+      register: stat_result
+      
+    - name: Rename nexus folder
+      shell: "mv {{ search_result.files[0].path }} /opt/nexus"
+      when: not stat_result.stat.exists
+
+- name: Create1 new Linux user for nodejs app
+  hosts: nexus_servers
+  tasks:
+    - name: Ensure that nexus group exists
+      ansible.builtin.group:
+        name: nexus
+        state: present
+      
+    - name: Create node user
+      ansible.builtin.user:
+        name: nexus
+        comment: nexus user
+        group: nexus
+
+    - name: Make nexus user and group owner of the nexus folders
+      ansible.builtin.file:
+        path: /opt/nexus
+        state: directory
+        owner: nexus
+        group: nexus
+        recurse: True
+      
+    - name: Make nexus user and group owner of the nexus folders
+      ansible.builtin.file:
+        path: /opt/sonatype-work
+        state: directory
+        owner: nexus
+        group: nexus
+        recurse: True
+
+- name: start nexus with nexus user
+  hosts: nexus_servers
+  become_user: nexus
+  tasks:
+    - name: Set run_as_user in nexus.rc file
+      #blockinfile adds the file and leaves two comment lines whereas lineinfile just ensures that a line is present
+      ansible.builtin.lineinfile:
+        path: /opt/nexus/bin/nexus.rc
+        regexp: '^#run_as_user=""'
+        line: run_as_user="nexus"
+
+    - name: Start nexus
+      command: /opt/nexus/bin/nexus start
+
+- name: Verify nexus is running
+  hosts: nexus_servers
+  tasks:
+    - name: Check with ps
+      shell: ps aux | grep nexus
+      register: ps_result
+
+    - debug: "msg= {{ps_result.stdout_lines}}"
