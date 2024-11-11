@@ -1,0 +1,92 @@
+---
+- name: Wait for all connections to be ready
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Ensure ssh port is open
+      ansible.builtin.wait_for:
+        port: 22
+        delay: 10
+        timeout: 100
+        search_regex: OpenSSH
+        host: '{{ (ansible_ssh_host|default(ansible_host))|default(inventory_hostname) }}'
+      vars:
+        ansible_connection: local
+        ansible_python_interpreter: /usr/bin/python3
+
+
+- name: install Docker and docer-compose
+  hosts: all
+  become: true
+  tasks:  
+    - name: Ensure Docker is installed
+      ansible.builtin.yum:
+        name: docker
+        update_cache: true
+        state: present
+    - name: Start docker daemon
+      ansible.builtin.systemd:
+        name: docker
+        state: started
+
+- name: Create new user
+  hosts: all
+  become: true
+  tasks:
+    - name: create new user
+      ansible.builtin.user:
+        name: jonas
+        groups: adm,docker
+
+
+- name: Install docker-compose
+  hosts: all
+  become: true
+  become_user: jonas
+  tasks:
+    - name: Create cli-plugins folder for docker-compose
+      ansible.builtin.file:
+        path: ~/.docker/cli-plugins
+        state: directory
+    - name: Get hosts architecture
+      ansible.builtin.shell: "uname -m"
+      register: host_arch
+    - name: Download docker-compose
+      ansible.builtin.get_url:
+        url: "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-{{ host_arch.stdout }}"
+        dest: ~/.docker/cli-plugins/docker-compose
+        mode: +x
+
+- name: Start Docker service
+  hosts: all
+  become: true
+  tasks:
+    
+
+- name: Add ec2 user to docker group
+  hosts: all
+  become: true
+  tasks:
+    
+
+
+- name: Start docker containers
+  hosts: all
+  become: true
+  become_user: jonas
+  vars_files:
+    - project-vars.yaml
+  tasks:
+    - name: Copy docker compose
+      ansible.builtin.copy:
+        src: ./docker-compose-full.yaml
+        dest: /home/jonas/docker-compose.yaml
+    - name: login to dockerhub
+      community.docker.docker_login:
+        username: jaykay84
+        password: "{{ docker_pw }}"
+
+    - name: Ensure containers are running
+      community.docker.docker_compose_v2:
+        project_src: /home/jonas/
+        

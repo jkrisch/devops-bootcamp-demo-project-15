@@ -17,7 +17,7 @@ Authentication is done via ssh key
 * A play is a group of tasks 
 
 
-# Modules and Collections
+## Modules and Collections
 
 ## What is a collection
 
@@ -75,3 +75,24 @@ or by passing them when executing ansible-playbook using the
 parameter
 
 or (what is always preferred) use a vars file:
+
+
+
+## Demo Project - Deploy Nexus
+
+we can follow all commands from the previous installation.
+We only have to transform them into the respective modules.
+
+To avoid that we overwrite the existing nexus folder we check it and include a when-clause (conditional).
+
+
+## Demo Project - Deploy docker and start applications on ec2 instance and docker compose
+see [ansible files](./deploy-2-ec2-ansible/) and [terraform-files](./deploy-2-ec2-terraform/).
+Using the remote_exec in terraform you can integrate the playbooks within the terraform process:
+[see](./deploy-2-ec2-tf-ansible-integration/)
+We can either define the remote_exec within the resource which is affected or we use the resource_null resource
+
+
+## Dynamic Inventory
+Manage an inventory which changes over time.
+A reason for this could be scaling up and down your cloud infrastructure (IPs change everytime.)

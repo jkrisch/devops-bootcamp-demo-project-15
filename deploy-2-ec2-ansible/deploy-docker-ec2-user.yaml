@@ -1,0 +1,74 @@
+---
+- name: install Docker and docer-compose
+  hosts: docker_hosts
+  become: true
+  tasks:  
+    - name: Ensure Docker is installed
+      ansible.builtin.yum:
+        name: docker
+        update_cache: true
+        state: present
+    - name: Start docker daemon
+      ansible.builtin.systemd:
+        name: docker
+        state: started
+    - name: Add ec2 user to docker group
+      ansible.builtin.user:
+        name: ec2-user
+        groups: docker
+        append: true
+    #the following task is necessary as the groups are only refreshed/activated once the user reconnects to the nexus_server
+    #otherwise the user won't be able to execute the docker commands
+    - name: Recconect to session
+      ansible.builtin.meta: reset_connection
+
+
+- name: Install docker-compose
+  hosts: docker_hosts
+ #  become: true
+  tasks:
+    - name: Create cli-plugins folder for docker-compose
+      ansible.builtin.file:
+        path: ~/.docker/cli-plugins
+        state: directory
+    - name: Get hosts architecture
+      ansible.builtin.shell: "uname -m"
+      register: host_arch
+    - name: Download docker-compose
+      ansible.builtin.get_url:
+        url: "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-{{ host_arch.stdout }}"
+        dest: ~/.docker/cli-plugins/docker-compose
+        mode: +x
+
+- name: Start Docker service
+  hosts: docker_hosts
+  become: true
+  tasks:
+    
+
+- name: Add ec2 user to docker group
+  hosts: docker_hosts
+  become: true
+  tasks:
+    
+
+
+- name: Start docker containers
+  hosts: docker_hosts
+  vars_prompt:
+    - name: docker_pw
+      prompt: Enter your password for the docker login
+  tasks:
+    - name: Copy docker compose
+      ansible.builtin.copy:
+        src: ./docker-compose-full.yaml
+        dest: /home/ec2-user/docker-compose.yaml
+    - name: login to dockerhub
+      community.docker.docker_login:
+        username: jaykay84
+        password: "{{ docker_pw }}"
+
+    - name: Ensure containers are running
+      community.docker.docker_compose_v2:
+        project_src: /home/ec2-user/
+        
