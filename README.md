@@ -96,3 +96,30 @@ We can either define the remote_exec within the resource which is affected or we
 ## Dynamic Inventory
 Manage an inventory which changes over time.
 A reason for this could be scaling up and down your cloud infrastructure (IPs change everytime.)
+
+Before being able to create the dynamic inventory we need to connect to the aws account and fetch server informations.
+For this there are two options:
+
+1. Inventory Plugins
+2. Inventory Scripts
+
+Redhat recommends using Plugins (as they integrate better with ansible).
+So for aws we need to use the aws_ec2 Inventory plugin (https://docs.ansible.com/ansible/latest/collections/amazon/aws/aws_ec2_inventory.html)-
+Using
+```bash
+ansible-inventory -i inventory_aws_ec2.yaml --graph
+```
+or
+```bash
+ansible-inventory -i inventory_aws_ec2.yaml --list
+```
+We can see the information we get from our aws account.
+But we get the private DNS names and not the public ones which we could use to connect to the server.
+Therefore we need to do the following:
+add the line 
+``` json
+enable_dns_hostnames = true
+```
+
+In case we want to create environment based inventories we can use the 'filter' attribute in the dynamic inventory file.
+

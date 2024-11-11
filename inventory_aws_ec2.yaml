@@ -1,0 +1,12 @@
+# Minimal example using environment vars or instance role credentials
+# Fetch all hosts in eu-central-1, the hostname is the public DNS if it exists, otherwise the private IP address
+plugin: amazon.aws.aws_ec2
+regions:
+  - eu-central-1
+
+#filters:
+ # tag:Name: dev*
+
+keyed_groups:
+  - key: tags
+    prefix: "tag"

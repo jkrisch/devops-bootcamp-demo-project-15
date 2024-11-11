@@ -10,7 +10,7 @@ variable my_ip {}
 variable instance_type {}
 variable public_key_location {}
 variable image_name {}
-variable ssh_key_private{}
+#variable ssh_key_private{}
 
 resource "aws_vpc" "myapp-vpc" {
   cidr_block = var.vpc_cidr_block
@@ -119,14 +119,50 @@ resource "aws_instance" "myapp-server" {
     Name: "${var.env_prefix}-server"
   }
 }
+resource "aws_instance" "myapp-server-2" {
+  ami = data.aws_ami.latest-amazon-linux-image.id
+  instance_type = var.instance_type
 
-resource "null_resource" "configure_server" {
-  triggers = {
-    trigger = aws_instance.myapp-server.public_ip
+  subnet_id = aws_subnet.myapp-subnet-1.id
+  vpc_security_group_ids = [aws_default_security_group.default-sg.id]
+  availability_zone = var.avail_zone
+
+  associate_public_ip_address = true
+  key_name = aws_key_pair.ssh-key.key_name
+
+  tags = {
+    Name: "${var.env_prefix}-server-2"
   }
+}
 
-  provisioner "local-exec" {
-    working_dir = "/home/jonas/devopsbootcamp/devops-bootcamp-demo-projects/Lecture-15/"
-    command = "ansible-playbook --inventory ${aws_instance.myapp-server.public_ip}, --private-key ${var.ssh_key_private} --user ec2-user deploy-2-ec2-ansible/deploy-docker.yaml"
+resource "aws_instance" "myapp-server-3" {
+  ami = data.aws_ami.latest-amazon-linux-image.id
+  instance_type = "t2.small"
+
+  subnet_id = aws_subnet.myapp-subnet-1.id
+  vpc_security_group_ids = [aws_default_security_group.default-sg.id]
+  availability_zone = var.avail_zone
+
+  associate_public_ip_address = true
+  key_name = aws_key_pair.ssh-key.key_name
+
+  tags = {
+    Name: "${var.env_prefix}-server-3"
+  }
+}
+
+resource "aws_instance" "prod-myapp-server-1" {
+  ami = data.aws_ami.latest-amazon-linux-image.id
+  instance_type = "t2.small"
+
+  subnet_id = aws_subnet.myapp-subnet-1.id
+  vpc_security_group_ids = [aws_default_security_group.default-sg.id]
+  availability_zone = var.avail_zone
+
+  associate_public_ip_address = true
+  key_name = aws_key_pair.ssh-key.key_name
+
+  tags = {
+    Name: "prod-server-1"
   }
 }

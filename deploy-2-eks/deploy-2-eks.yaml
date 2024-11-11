@@ -1,0 +1,18 @@
+---
+- name: Deploy components to k8s eks cluster
+  hosts: localhost
+  tasks:
+    - name: Create k8s namespace
+      kubernetes.core.k8s:
+        name: myapp-namespace
+        api_version: v1
+        kind: Namespace
+        state: present
+        kubeconfig: /home/jonas/devopsbootcamp/devops-bootcamp-lecture-12-tf-learn/kubeconfig_myapp-eks-cluster
+
+    - name: Deploy nginx app
+      kubernetes.core.k8s:
+        src: nginx-config.yaml
+        state: present
+        kubeconfig: /home/jonas/devopsbootcamp/devops-bootcamp-lecture-12-tf-learn/kubeconfig_myapp-eks-cluster
+        namespace: myapp-namespace
