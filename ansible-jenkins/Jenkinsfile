@@ -24,7 +24,7 @@ pipeline{
                     echo "configuring ec2 instances"
                     //define empty key-value pair object
                     def remote = [:]
-                    remote.name = "ansible-controller"$
+                    remote.name = "ansible-controller"
                     remote.host = "64.227.124.93"
                     remote.allowAnyHost = true
 
