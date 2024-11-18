@@ -1,0 +1,14 @@
+- name: Copy docker compose
+  ansible.builtin.copy:
+    src: docker-compose.yaml
+    dest: /home/jonas/docker-compose.yaml
+
+- name: login to dockerhub
+  community.docker.docker_login:
+    registry_url: "{{ docker_registry }}"
+    username: "{{ docker_username }}"
+    password: "{{ docker_pw }}"
+
+- name: Ensure containers are running
+  community.docker.docker_compose_v2:
+    project_src: /home/jonas/
