@@ -123,3 +123,74 @@ enable_dns_hostnames = true
 
 In case we want to create environment based inventories we can use the 'filter' attribute in the dynamic inventory file.
 
+
+## Ansible - K8s
+we use localhost as host, as we run the tasks locally but connect to the k8s cluster using the kubeconfig file.
+To deploy apps or other k8s components using ansible we use the *kubernetes.core.k8s* module.
+We can either pass config files:
+```yaml
+    - name: Deploy nginx app
+      kubernetes.core.k8s:
+        src: nginx-config.yaml
+        state: present
+        kubeconfig: /home/jonas/devopsbootcamp/devops-bootcamp-lecture-12-tf-learn/kubeconfig_myapp-eks-cluster
+        namespace: myapp-namespace
+```
+or pass the whole config using
+```yaml
+    - name: Deploy nginx app
+      kubernetes.core.k8s:
+        state: present
+        kubeconfig: /home/jonas/devopsbootcamp/devops-bootcamp-lecture-12-tf-learn/kubeconfig_myapp-eks-cluster
+        definition:
+            apiVersion: v1
+            kind: Service
+            ...
+```
+
+
+## Run Ansible from Jenkins Pipeline
+With other tools like helm, kubectl etc. we installed them on the jenkins server (or in my case I installed them during the container build).
+With Ansible we follow a different approach:
+* Create a dedicated server for Ansible (Ansible Control Node)
+* Install Ansible on that server
+This is a common practice
+
+After deploying the droplet:
+* install ansible-core
+* install python3-boto3 package
+Then create [Jenkinsfile](./ansible-jenkins/Jenkinsfile).
+ 
+
+## Ansible Roles
+With Roles you can structure your playbooks into smaller more maintanable files.
+It also makes reusability much easier as you can refer to specific tasks which are in certain roles within different plays.
+One can look at roles like "packages".
+
+A Role can also contain files which you need like specific files or templates, or role-specific variables and even custom modules (library/my_module.py).
+
+Roles have a standard file/folder structure.
+
+```
+roles/
+    common/               # this hierarchy represents a "role"
+        tasks/            #
+            main.yml      #  <-- tasks file can include smaller files if warranted
+        handlers/         #
+            main.yml      #  <-- handlers file
+        templates/        #  <-- files for use with the template resource
+            ntp.conf.j2   #  <------- templates end in .j2
+        files/            #
+            bar.txt       #  <-- files for use with the copy resource
+            foo.sh        #  <-- script files for use with the script resource
+        vars/             #
+            main.yml      #  <-- variables associated with this role
+        defaults/         #
+            main.yml      #  <-- default lower priority variables for this role
+        meta/             #
+            main.yml      #  <-- role dependencies
+        library/          # roles can also include custom modules
+        module_utils/     # roles can also include custom module_utils
+        lookup_plugins/   # or other types of plugins, like lookup in this case
+```
+[see: https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html)
