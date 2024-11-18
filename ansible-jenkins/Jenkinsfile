@@ -11,7 +11,7 @@ pipeline{
                         withCredentials([
                             sshUserPrivateKey(credentialsId: 'ec2-instances-key', keyFileVariable: 'keyFile', usernameVariable: 'user')
                         ]){
-                            sh "scp $keyFile root@64.227.124.93:/root/ssh-key.pem"
+                            sh 'scp $keyFile root@64.227.124.93:/root/ssh-key.pem'
                         }
                     }
                 }
