@@ -1,17 +1,20 @@
 pipeline{
     agent any
+    environment {
+        ANSIBLE_CONTROLLER_IP = "64.227.124.93"
+    }
     stages{
         stage("copy files to ansible server"){
             steps{
                 script{
                     echo "Copying necessary files to the ansible controller"
                     sshagent(['ansible-controller-key']){
-                        sh "scp -o StrictHostKeyChecking=no ansible-jenkins/ansible/* root@64.227.124.93:/root"
+                        sh "scp -o StrictHostKeyChecking=no ansible-jenkins/ansible/* root@${ANSIBLE_CONTROLLER_IP}:/root"
 
                         withCredentials([
                             sshUserPrivateKey(credentialsId: 'ec2-instances-key', keyFileVariable: 'keyFile', usernameVariable: 'user')
                         ]){
-                            sh 'scp $keyFile root@64.227.124.93:/root/ssh-key.pem'
+                            sh 'scp $keyFile root@$ANSIBLE_CONTROLLER_IP:/root/ssh-key.pem'
                         }
                     }
                 }
@@ -25,7 +28,7 @@ pipeline{
                     //define empty key-value pair object
                     def remote = [:]
                     remote.name = "ansible-controller"
-                    remote.host = "64.227.124.93"
+                    remote.host = ANSIBLE_CONTROLLER_IP
                     remote.allowAnyHosts = true
 
                     withCredentials([
