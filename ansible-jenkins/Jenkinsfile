@@ -6,7 +6,7 @@ pipeline{
                 script{
                     echo "Copying necessary files to the ansible controller"
                     sshagent(['ansible-controller-key']){
-                        sh "scp -o StrictHostKeyChecking=no ./ansible/* root@64.227.124.93:/root"
+                        sh "scp -o StrictHostKeyChecking=no ansible-jenkins/ansible/* root@64.227.124.93:/root"
 
                         withCredentials([
                             sshUserPrivateKey(credentialsId: 'ec2-instances-key', keyFileVariable: 'keyFile', usernameVariable: 'user')
